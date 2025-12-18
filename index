@@ -1,0 +1,91 @@
+<?php
+require_once __DIR__ . '/includes/function.php';
+
+$posts = getPosts();
+
+usort($posts, function($a, $b) {
+ return strtotime($b['created_at']) <=> strtotime($a['created_at']);
+});
+?>
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name "viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная | Мой блог</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1>Мой интернет-блог</h1>
+            <nav class="nav">
+                <a href="index.php">Главная</a>
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <a href="create.php">Создать пост</a>
+                    <a href="logout.php">Выход (<?= htmlspecialchars($_SESSION['username']) ?>)</a>
+                <?php else: ?>
+                    <a href="login.php">Войти</a>
+                    <a href="register.php">Регистрация</a>
+                <?php endif; ?>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <?php if (empty($posts)): ?>
+            <div class="empty-state">
+                <p>Пока здесь нет ни одной записи.</p>
+            </div>
+        <?php else: ?>
+            <div class="posts-list">
+                <?php foreach ($posts as $post): ?>
+                    <article class="post-card">
+                        <h2>
+                            <a href="post.php?id=<?= htmlspecialchars($post['id']) ?>">
+                                <?= htmlspecialchars($post['title']) ?>
+                            </a>
+                        </h2>
+                        
+                        <div class="post-meta">
+                            Автор: <?= htmlspecialchars($post['username'] ?? 'Неизвестен') ?>
+                            | <?= date('d.m.Y H:i', strtotime($post['created_at'])) ?>
+                        </div>
+                        
+                        <?php if (!empty($post['media']) && is_array($post['media']) && count($post['media']) > 0): ?>
+                            <div class="post-media-preview">
+                                <img src="<?= htmlspecialchars($post['media'][0]) ?>" 
+                                     alt="Превью записи"
+                                     style="max-width: 100%; max-height: 300px; object-fit: cover; border-radius: 4px; margin: 10px 0;">
+                            </div>
+                        <?php endif; ?>
+                        
+                        <p class="post-preview">
+                            <?= mb_substr(htmlspecialchars($post['content']), 0, 200) ?>
+                            <?php if (mb_strlen($post['content']) > 200): ?>...<?php endif; ?>
+                        </p>
+                        
+                        <div style="margin-top: 10px;">
+                            <a href="post.php?id=<?= htmlspecialchars($post['id']) ?>" class="btn btn-secondary" style="padding: 5px 15px; font-size: 0.9em;">
+                                Читать далее
+                            </a>
+                            <?php if (!empty($post['media'])): ?>
+                                <span style="margin-left: 10px; color: var(--secondary-color); font-size: 0.9em;">
+                                    📷 <?= count($post['media']) ?> фото
+                                </span>
+                            <?php endif; ?>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>Мой блог © <?= date('Y') ?> – Практический проект на PHP</p>
+        </div>
+    </footer>
+</body>
+</html>
